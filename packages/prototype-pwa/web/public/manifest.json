@@ -4,8 +4,8 @@
   "description": "Vérifiez ce qui se dit, à mesure.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0d1a",
-  "theme_color": "#0d0d1a",
+  "background_color": "#F4F1EC",
+  "theme_color": "#F4F1EC",
   "icons": [
     {
       "src": "/icon.svg",

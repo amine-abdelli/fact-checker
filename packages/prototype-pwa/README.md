@@ -34,21 +34,35 @@ Prior art, for reference only: `docs/archive/live-prototype-spec-v1.md`.
 
 ## Run it
 
-### 1. Server
+Two terminals, backend first. Requires Python ≥ 3.11 and Node ≥ 18.
+
+### 1. Backend (FastAPI) — terminal 1
 
 ```bash
 cd packages/prototype-pwa/server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# edit .env: set DEEPGRAM_API_KEY and OPENAI_API_KEY
+```
+
+Edit `server/.env` and fill in **both** keys (a copied `.env.example` has empty values — the
+server refuses to start with a clear `RuntimeError` naming the missing one):
+
+```
+DEEPGRAM_API_KEY=...   # from console.deepgram.com, or the repo root's .env.keys.bak
+OPENAI_API_KEY=...     # from platform.openai.com, or the repo root's .env.keys.bak
+```
+
+Using `OPENAI_API_KEY` here is the documented derogation above, not an oversight.
+
+```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Both keys can come from the repo root's `.env.keys.bak`. Using `OPENAI_API_KEY` here is the
-documented derogation above, not an oversight.
+Verify it's up: `curl http://localhost:8000/health` → `{"status":"ok"}`. Keep this terminal open;
+`--reload` picks up code edits automatically.
 
-### 2. Web
+### 2. Frontend (PWA) — terminal 2
 
 ```bash
 cd packages/prototype-pwa/web
@@ -56,23 +70,35 @@ npm install
 npm run dev -- --host
 ```
 
-By default Vite serves plain HTTP at `http://localhost:5173` — `getUserMedia` works there without
-TLS, and the app talks to the FastAPI server over plain `ws://localhost:8000/ws`. This is enough
-for local-only testing (two people, one laptop mic).
+Open the `http://localhost:5173` URL Vite prints. `http://localhost` is a secure context, so
+`getUserMedia` (microphone access) works there without TLS, and the app talks to the backend over
+plain `ws://localhost:8000/ws` — no certificate to accept, nothing else to configure for
+local-only testing (two people, one laptop mic).
 
-To test from a phone over LAN, `getUserMedia` requires HTTPS on a non-localhost host: run
+To test from a phone over LAN instead, `getUserMedia` requires HTTPS on a non-localhost host: run
 `VITE_HTTPS=1 npm run dev -- --host` to get a self-signed cert at `https://<your-LAN-ip>:5173`
 (accept the certificate warning on the phone). Note this only covers the frontend — the FastAPI
-server still has no TLS, so the browser will still try `wss://` and fail against it; LAN testing
-needs a TLS-terminating proxy in front of the server too, which this prototype does not set up.
+backend still has no TLS, so the browser will still try `wss://` and fail against it; LAN testing
+needs a TLS-terminating proxy in front of the backend too, which this prototype does not set up.
+Stick to localhost unless you're specifically testing phone capture.
 
-Override the backend port with `VITE_SERVER_PORT` if the server runs elsewhere.
+Override the backend port with `VITE_SERVER_PORT` if the backend runs elsewhere.
 
 ### 3. Talk
 
 Two people, one browser tab, click **▶ Écouter**. Speaker 1 (blue) and Speaker 2 (orange) show up
 on opposite sides of the transcript pane; claims stream into the right-hand pane as they're
 extracted, each card showing category, speaker, and the phrase→card latency.
+
+### Troubleshooting
+
+- `RuntimeError: Missing required environment variable` on backend startup → a key in
+  `server/.env` is present but empty; fill it in and the `--reload` process restarts on its own.
+- `WARNING: Invalid HTTP request received` spamming the backend log → the page is being served
+  over HTTPS (`VITE_HTTPS=1`) while the backend has no TLS, so the browser opens a `wss://`
+  handshake the backend can't parse. Drop `VITE_HTTPS` and use `http://localhost:5173`.
+- Certificate warning in the browser → only expected when `VITE_HTTPS=1` is set (self-signed, for
+  LAN/phone testing). Not expected on plain `http://localhost`.
 
 ## Known limitations (prototype, not bugs to "fix" before testing)
 

@@ -3,6 +3,7 @@
 
 export interface SpeakerMeta {
   label: string;
+  initial: string;
   color: string;
   side: "left" | "right";
 }
@@ -14,6 +15,8 @@ const COLORS = [
   "oklch(0.62 0.10 145)", // Locuteur 4 — vert
 ];
 
+const UNKNOWN_COLOR = "oklch(0.55 0.005 280)";
+
 function speakerIndex(speakerId: string | null): number {
   if (!speakerId) return -1;
   const match = /spk_(\d+)/.exec(speakerId);
@@ -23,10 +26,11 @@ function speakerIndex(speakerId: string | null): number {
 export function getSpeakerMeta(speakerId: string | null): SpeakerMeta {
   const index = speakerIndex(speakerId);
   if (index < 0) {
-    return { label: "Locuteur ?", color: "oklch(0.55 0.005 280)", side: "left" };
+    return { label: "Locuteur ?", initial: "?", color: UNKNOWN_COLOR, side: "left" };
   }
   return {
     label: `Locuteur ${index + 1}`,
+    initial: String.fromCharCode(65 + index), // A, B, C, D — matches the design mockup's avatar style
     color: COLORS[index % COLORS.length],
     side: index === 1 ? "right" : "left",
   };
