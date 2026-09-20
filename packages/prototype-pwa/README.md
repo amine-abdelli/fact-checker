@@ -102,7 +102,17 @@ extracted, each card showing category, speaker, and the phrase→card latency.
 
 ## Known limitations (prototype, not bugs to "fix" before testing)
 
-- Single session at a time — one WebSocket connection == one recording, no multi-tenancy.
+- **Single-mic diarization is unreliable — confirmed, not a bug in this code.** Real two-person
+  testing on 2026-09-20 kept attributing everyone to `spk_0`. Reproduced independently: sent two
+  clearly distinct synthetic French voices (macOS `say`, two different speakers) through
+  `DeepgramStream` exactly as this server does, across all four combinations of
+  `{nova-2, nova-3} × {diarize=true, diarize_model=latest}` — every single word came back
+  `speaker=0` in all four. This matches Deepgram's own documentation and community reports:
+  single-channel (one shared mic) diarization is an acknowledged weak spot; their only documented
+  fix is multichannel audio (one mic per speaker), which a one-device PWA can't provide. This is
+  exactly the risk D-02 (Deepgram vs Speechmatics) was left open for — decide there before
+  assuming Stage 2 diarization will work on a shared mic. Not something to debug further in this
+  throwaway prototype.
 - Speaker attribution takes the first word's speaker per ASR utterance; an utterance that
   genuinely mixes two speakers mid-sentence is logged, not split.
 - The latency readout matches a claim's `raw_quote` against the last finalized transcript segment

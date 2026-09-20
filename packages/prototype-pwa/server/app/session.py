@@ -32,6 +32,7 @@ class Session:
         self._emit = emit
         self._asr = DeepgramStream(language=config.LANGUAGE)
         self._asr_task: asyncio.Task | None = None
+        self._ticker_task: asyncio.Task | None = None
         self._running = False
 
         self._finalized_segments: list[_BufferedSegment] = []
@@ -53,6 +54,7 @@ class Session:
         self._last_extraction_at = time.monotonic()
         await self._asr.connect()
         self._asr_task = asyncio.create_task(self._consume_asr())
+        self._ticker_task = asyncio.create_task(self._extraction_ticker())
         await self._emit(
             {
                 "type": "session",
@@ -73,7 +75,28 @@ class Session:
         if self._asr_task is not None:
             self._asr_task.cancel()
             self._asr_task = None
+        if self._ticker_task is not None:
+            self._ticker_task.cancel()
+            self._ticker_task = None
         logger.info("session=%s stopped", self.session_id)
+
+    async def _extraction_ticker(self) -> None:
+        """Enforces EXTRACT_INTERVAL as a real wall-clock ceiling.
+
+        The word-count/elapsed check in _handle_asr_message only runs when a new final
+        transcript segment arrives — if segments arrive sparsely (silence, slow speech,
+        an utterance that never finalizes), a claim can sit unextracted far longer than
+        EXTRACT_INTERVAL with nothing to force it out. This ticker is the fix: it checks
+        independently of ASR message arrival, every second.
+        """
+        try:
+            while self._running:
+                await asyncio.sleep(1)
+                elapsed = time.monotonic() - self._last_extraction_at
+                if elapsed >= config.EXTRACT_INTERVAL and self._finalized_segments:
+                    asyncio.create_task(self._run_extraction())
+        except asyncio.CancelledError:
+            pass
 
     async def feed_audio(self, chunk: bytes) -> None:
         if not self._running:

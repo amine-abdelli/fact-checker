@@ -80,6 +80,14 @@ Return a JSON array. Each element has exactly these fields:
   "verifiability_score": 0.0
 }}
 
+verifiability_score is 0-1: how CHECKABLE this claim is against a real source (statistics,
+records, encyclopedic facts). THIS IS NOT A TRUTH SCORE. Never lower it because you believe
+the claim is false, exaggerated, or absurd — a wrong superlative, a wrong date, or a wrong
+named fact is exactly as verifiable as a correct one, and must score just as high (a false
+"Paris est la plus petite ville du monde" scores 1.0, not 0.0 — any source instantly settles
+it). Only lower this score when checking would genuinely be hard: the claim is vague, lacks a
+clear referent, or no real source could settle it either way.
+
 Return [] if nothing qualifies. Return ONLY valid JSON — no markdown fence, no preamble.
 """
 
