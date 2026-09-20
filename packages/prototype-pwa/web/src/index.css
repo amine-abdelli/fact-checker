@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --background: 240 45% 7%;
+  --foreground: 235 100% 90%;
+  --card: 243 35% 12%;
+  --card-foreground: 235 100% 90%;
+  --primary: 248 100% 71%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 240 25% 16%;
+  --muted-foreground: 235 15% 62%;
+  --destructive: 2 70% 72%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 245 30% 20%;
+  --ring: 248 100% 71%;
+  --radius: 0.75rem;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground;
+  margin: 0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}

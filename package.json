@@ -1,0 +1,11 @@
+{
+  "name": "plumb",
+  "private": true,
+  "description": "Plumb — real-time fact-checker. Monorepo root; see packages/.",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "proto": "pnpm --filter @plumb/proto-web dev",
+    "server": "pnpm --filter @plumb/server start:dev",
+    "front": "pnpm --filter @plumb/front dev"
+  }
+}
